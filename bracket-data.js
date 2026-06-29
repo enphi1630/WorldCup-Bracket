@@ -98,5 +98,37 @@ const INITIAL_RESULTS = {
   "r32-3": { winner: "Canada", score: "1–0" },   // 28 Jun 2026, Los Angeles (SoFi) — Eustáquio 90'+
 };
 
+/* ---- Live results feed (ESPN public scoreboard) -------------------
+   The page auto-fetches completed match results from ESPN and advances
+   the bracket on its own — no clicking required. ESPN allows browser
+   (cross-origin) requests and needs no API key.
+------------------------------------------------------------------- */
+const LIVE_CONFIG = {
+  espnUrl: "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard",
+  start: "2026-06-28",      // first knockout date
+  end:   "2026-07-19",      // Final
+  refreshSeconds: 90,       // auto-refresh interval
+};
+
+/* Map each of our 32 teams to the names/codes ESPN might report.
+   Matching is accent- and punctuation-insensitive, so only meaningful
+   variants and the FIFA 3-letter code are listed. */
+const TEAM_ALIASES = {
+  "Spain":["ESP","Spain"], "Netherlands":["NED","NLD","Netherlands","Holland"],
+  "Mexico":["MEX","Mexico"], "Croatia":["CRO","Croatia"], "Japan":["JPN","Japan"],
+  "DR Congo":["COD","CGO","DR Congo","Congo DR","DRC","Democratic Republic of the Congo","Congo"],
+  "Paraguay":["PAR","PRY","Paraguay"], "Ivory Coast":["CIV","Ivory Coast","Cote d'Ivoire","Côte d'Ivoire"],
+  "Argentina":["ARG","Argentina"], "Sweden":["SWE","Sweden"], "Morocco":["MAR","Morocco"],
+  "Canada":["CAN","Canada"], "Belgium":["BEL","Belgium"], "Ecuador":["ECU","Ecuador"],
+  "Austria":["AUT","Austria"], "Bosnia & Herzegovina":["BIH","Bosnia & Herzegovina","Bosnia and Herzegovina","Bosnia-Herzegovina","Bosnia"],
+  "Germany":["GER","DEU","Germany"], "Brazil":["BRA","Brazil"], "Norway":["NOR","Norway"],
+  "Portugal":["POR","PRT","Portugal"], "Egypt":["EGY","Egypt"], "Ghana":["GHA","Ghana"],
+  "Senegal":["SEN","Senegal"], "Algeria":["ALG","DZA","Algeria"],
+  "France":["FRA","France"], "England":["ENG","England"], "Switzerland":["SUI","SWI","CHE","Switzerland"],
+  "Colombia":["COL","Colombia"], "USA":["USA","US","United States","United States of America"],
+  "Cape Verde":["CPV","Cape Verde","Cabo Verde"], "Australia":["AUS","Australia"],
+  "South Africa":["RSA","ZAF","South Africa"],
+};
+
 /* expose for index.html */
-window.WC = { PLAYERS, ROUND_POINTS, ROUND_LABEL, ROUND_ORDER, FLAGS, MATCHES, INITIAL_RESULTS };
+window.WC = { PLAYERS, ROUND_POINTS, ROUND_LABEL, ROUND_ORDER, FLAGS, MATCHES, INITIAL_RESULTS, LIVE_CONFIG, TEAM_ALIASES };
