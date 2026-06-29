@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FIFA World Cup 2026 — Knockout Bracket Pool</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#111c33; --panel2:#0f1830; --ink:#e8eefc; --muted:#93a4c8;
+    --line:#33425f; --gold:#f5c542; --win:#1f3a2a; --winline:#2fbf71;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0b1220,#0e1730);color:var(--ink);
+       font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+  header.app{padding:22px 26px 8px;text-align:center}
+  header.app h1{margin:0;font-size:26px;letter-spacing:.4px}
+  header.app .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .wrap{max-width:1500px;margin:0 auto;padding:14px 18px 60px}
+
+  /* ---- standings ---- */
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+               padding:16px 18px;margin:16px 0;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  section.card h2{margin:0 0 12px;font-size:18px;display:flex;align-items:center;gap:10px}
+  table.standings{width:100%;border-collapse:collapse;font-size:14px}
+  table.standings th,table.standings td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--line)}
+  table.standings th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+  table.standings td.name{text-align:left;font-weight:700;font-size:15px}
+  table.standings td.total{font-weight:800;font-size:17px;color:var(--gold)}
+  table.standings tr.rank-1 td.total{color:var(--gold)}
+  .swatch{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:middle}
+  .rosters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+  .roster{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .roster h3{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .roster ul{margin:0;padding-left:2px;list-style:none;font-size:12.5px;color:var(--muted)}
+  .roster li{padding:2px 0;display:flex;justify-content:space-between;gap:6px}
+  .roster li.out{opacity:.45;text-decoration:line-through}
+  .roster li .pts{color:var(--gold);font-weight:700}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:4px}
+  button.btn{background:#1b2a49;color:var(--ink);border:1px solid var(--line);border-radius:8px;
+             padding:7px 12px;font-size:13px;cursor:pointer}
+  button.btn:hover{background:#243a63}
+  .hint{color:var(--muted);font-size:12.5px}
+
+  /* ---- bracket ---- */
+  .bracket-scroll{overflow-x:auto;padding-bottom:8px}
+  .bracket{position:relative;min-width:1380px}
+  #connectors{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+  .columns{position:relative;display:flex;align-items:stretch;z-index:1}
+  .col{display:flex;flex-direction:column;justify-content:space-around;flex:1 1 0;padding:0 7px;min-width:150px}
+  .col .rhead{text-align:center;color:var(--muted);font-size:11px;font-weight:700;
+              text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;height:14px}
+  .col.final-col{flex:0 0 190px}
+  .match{background:var(--panel2);border:1px solid var(--line);border-radius:8px;margin:6px 0;overflow:hidden}
+  .match.final{border-color:var(--gold);box-shadow:0 0 0 1px rgba(245,197,66,.25)}
+  .slot{display:flex;align-items:center;gap:7px;padding:6px 8px;cursor:pointer;font-size:13px;
+        border-left:4px solid transparent;transition:background .12s}
+  .slot + .slot{border-top:1px solid var(--line)}
+  .slot:hover{background:#16243f}
+  .slot .flag{width:18px;text-align:center}
+  .slot .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .slot .sc{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+  .slot.tbd{cursor:default;color:#5e6f93;font-style:italic}
+  .slot.tbd:hover{background:transparent}
+  .slot.winner{background:var(--win)}
+  .slot.winner .nm{font-weight:700}
+  .slot.loser{opacity:.5}
+  .slot.owned{border-left-color:var(--ownc)}
+  .champion{margin-top:10px;text-align:center;background:var(--panel2);border:1px solid var(--gold);
+            border-radius:10px;padding:10px}
+  .champion .lab{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .champion .who{font-size:18px;font-weight:800;color:var(--gold);margin-top:3px}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin:6px 0 0;color:var(--muted);font-size:12px}
+  .legend span{display:inline-flex;align-items:center}
+  footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:18px;line-height:1.6}
+  a{color:#7fb0ff}
+  @media (max-width:760px){.rosters{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header class="app">
+  <h1>🏆 FIFA World Cup 2026 — Knockout Bracket Pool</h1>
+  <div class="sub">32-team knockout • June 28 – July 19, 2026 • 4 players × 8 teams &nbsp;|&nbsp; R32 = 1 · R16 = 2 · QF = 4 · SF = 8 · Final = 16 pts</div>
+</header>
+
+<div class="wrap">
+
+  <!-- STANDINGS -->
+  <section class="card">
+    <h2>📊 Standings <span class="hint" id="asof"></span></h2>
+    <table class="standings" id="standingsTable"></table>
+  </section>
+
+  <!-- BRACKET -->
+  <section class="card">
+    <h2>🗺️ Bracket</h2>
+    <div class="controls">
+      <span class="hint">Click a team to mark it the winner of its match — picks save automatically and the standings update instantly.</span>
+      <button class="btn" id="resetBtn">↺ Reset to official results</button>
+      <button class="btn" id="clearBtn">✕ Clear all picks</button>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="bracket-scroll">
+      <div class="bracket">
+        <svg id="connectors"></svg>
+        <div class="columns" id="columns"></div>
+      </div>
+    </div>
+    <div class="champion"><div class="lab">Champion</div><div class="who" id="championName">— TBD —</div></div>
+  </section>
+
+  <!-- ROSTERS -->
+  <section class="card">
+    <h2>👥 Rosters &amp; live points</h2>
+    <div class="rosters" id="rosters"></div>
+  </section>
+
+  <footer>
+    Winners are determined from the official results at
+    <a href="https://www.fifa.com/" target="_blank" rel="noopener">fifa.com</a>.
+    Scores update continuously as matches go final.<br/>
+    As of 29 Jun 2026 the only completed knockout match is South Africa 0–1 Canada (28 Jun). The rest are scheduled.
+  </footer>
+</div>
+
+<script src="bracket-data.js"></script>
+<script>
+/* PLAYERS, ROUND_POINTS, ROUND_LABEL, ROUND_ORDER, FLAGS, MATCHES, INITIAL_RESULTS
+   are already defined globally by bracket-data.js */
+const STORE_KEY = "wc2026-bracket-results";
+
+/* team -> owner map */
+const OWNER = {};
+for (const [p,info] of Object.entries(PLAYERS)) info.teams.forEach(t => OWNER[t]=p);
+
+/* match lookup + which match each match feeds into */
+const BYID = {}; MATCHES.forEach(m => BYID[m.id]=m);
+const CHILD = {};                       // matchId -> {child, slot}
+MATCHES.forEach(m => {
+  ["a","b"].forEach(slot => { if (m[slot].win) CHILD[m[slot].win] = {child:m.id, slot}; });
+});
+
+/* results state: matchId -> {winner, score?} */
+let results = loadResults();
+function loadResults(){
+  try { const s = localStorage.getItem(STORE_KEY); if (s) return JSON.parse(s); } catch(e){}
+  return deepCopy(INITIAL_RESULTS);
+}
+function saveResults(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(results)); }catch(e){} }
+function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
+
+/* resolve the team currently sitting in a slot (may be undefined = TBD) */
+function teamIn(src){
+  if (src.team) return src.team;
+  if (src.win)  return results[src.win] ? results[src.win].winner : undefined;
+  return undefined;
+}
+/* a stored winner is only valid if it is actually one of the two teams present */
+function validWinner(m){
+  const w = results[m.id] && results[m.id].winner;
+  if (!w) return undefined;
+  const a = teamIn(m.a), b = teamIn(m.b);
+  return (w===a || w===b) ? w : undefined;
+}
+
+/* ---------- scoring ---------- */
+function computeScores(){
+  const table = {};
+  for (const p of Object.keys(PLAYERS)){ table[p] = {R32:0,R16:0,QF:0,SF:0,FINAL:0,total:0}; }
+  const teamPts = {};                                   // team -> points earned
+  for (const m of MATCHES){
+    const w = validWinner(m);
+    if (!w) continue;
+    const owner = OWNER[w];
+    const pts = ROUND_POINTS[m.round];
+    if (owner){ table[owner][m.round]+=pts; table[owner].total+=pts; }
+    teamPts[w] = (teamPts[w]||0)+pts;
+  }
+  return {table, teamPts};
+}
+
+/* a team is "eliminated" if it lost a match that has a valid winner */
+function eliminated(){
+  const out = new Set();
+  for (const m of MATCHES){
+    const w = validWinner(m); if (!w) continue;
+    const a = teamIn(m.a), b = teamIn(m.b);
+    if (a && a!==w) out.add(a);
+    if (b && b!==w) out.add(b);
+  }
+  return out;
+}
+
+/* ---------- rendering ---------- */
+const COLS_L = [["R32",["r32-1","r32-2","r32-3","r32-4","r32-5","r32-6","r32-7","r32-8"]],
+                ["R16",["r16-1","r16-2","r16-3","r16-4"]],
+                ["QF",["qf-1","qf-2"]],
+                ["SF",["sf-1"]]];
+const COLS_R = [["SF",["sf-2"]],
+                ["QF",["qf-3","qf-4"]],
+                ["R16",["r16-5","r16-6","r16-7","r16-8"]],
+                ["R32",["r32-9","r32-10","r32-11","r32-12","r32-13","r32-14","r32-15","r32-16"]]];
+
+function slotHTML(m, which){
+  const src = m[which];
+  const team = teamIn(src);
+  const w = validWinner(m);
+  const a = teamIn(m.a), b = teamIn(m.b);
+  const bothKnown = a && b;
+  if (!team){
+    const lbl = src.team ? src.team : "Winner "+labelOf(src.win);
+    return `<div class="slot tbd"><span class="flag"></span><span class="nm">${lbl}</span></div>`;
+  }
+  const owner = OWNER[team];
+  const col = owner ? PLAYERS[owner].color : "#888";
+  const cls = ["slot","owned"];
+  if (w===team) cls.push("winner");
+  else if (w && w!==team) cls.push("loser");
+  const score = results[m.id] && results[m.id].score ? results[m.id].score : "";
+  const sc = (w && score) ? `<span class="sc">${pickScore(score,which,w,team)}</span>` : "";
+  const clickable = bothKnown ? `data-match="${m.id}" data-team="${team}"` : `data-tbd="1"`;
+  return `<div class="${cls.join(' ')}" style="--ownc:${col}" ${clickable} title="${owner?owner+"'s pick":''}">
+            <span class="flag">${FLAGS[team]||""}</span><span class="nm">${team}</span>${sc}
+          </div>`;
+}
+function pickScore(score, which, winner, team){
+  // score stored "x–y" as winner–loser; show per side
+  const parts = score.split(/[–-]/); if (parts.length!==2) return "";
+  return team===winner ? parts[0] : parts[1];
+}
+function labelOf(id){ return BYID[id] ? id.toUpperCase().replace('-',' ') : id; }
+
+function matchHTML(id){
+  const m = BYID[id];
+  const isFinal = m.round==="FINAL";
+  return `<div class="match ${isFinal?'final':''}" id="box-${id}">
+            ${slotHTML(m,"a")}${slotHTML(m,"b")}
+          </div>`;
+}
+
+function render(){
+  // columns
+  const colsEl = document.getElementById("columns");
+  let html = "";
+  for (const [rd,ids] of COLS_L){
+    html += `<div class="col"><div class="rhead">${ROUND_LABEL[rd]}</div>${ids.map(matchHTML).join("")}</div>`;
+  }
+  html += `<div class="col final-col"><div class="rhead">Final</div>${matchHTML("final")}</div>`;
+  for (const [rd,ids] of COLS_R){
+    html += `<div class="col"><div class="rhead">${ROUND_LABEL[rd]}</div>${ids.map(matchHTML).join("")}</div>`;
+  }
+  colsEl.innerHTML = html;
+
+  // click handlers
+  colsEl.querySelectorAll(".slot[data-match]").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const mid = el.dataset.match, team = el.dataset.team;
+      if (results[mid] && results[mid].winner===team) delete results[mid];   // toggle off
+      else results[mid] = { winner: team };
+      cascadeClear();
+      saveResults(); render();
+    });
+  });
+
+  renderStandings();
+  renderRosters();
+  renderChampion();
+  renderLegend();
+  requestAnimationFrame(drawConnectors);
+}
+
+/* remove now-invalid downstream winners after a change */
+function cascadeClear(){
+  let changed = true;
+  while (changed){
+    changed = false;
+    for (const m of MATCHES){
+      if (results[m.id] && !validWinner(m)){ delete results[m.id]; changed = true; }
+    }
+  }
+}
+
+function renderStandings(){
+  const {table} = computeScores();
+  const rows = Object.keys(PLAYERS).map(p=>({p,...table[p]}));
+  rows.sort((x,y)=> y.total-x.total || x.p.localeCompare(y.p));
+  let h = `<thead><tr><th style="text-align:left">Team Name</th>
+      <th>Round of 32</th><th>Round of 16</th><th>Quarterfinals</th><th>Semifinals</th><th>Championship</th>
+      <th>Total Score</th></tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    h += `<tr class="rank-${i+1}">
+      <td class="name"><span class="swatch" style="background:${PLAYERS[r.p].color}"></span>${r.p}</td>
+      <td>${r.R32}</td><td>${r.R16}</td><td>${r.QF}</td><td>${r.SF}</td><td>${r.FINAL}</td>
+      <td class="total">${r.total}</td></tr>`;
+  });
+  h += `</tbody>`;
+  document.getElementById("standingsTable").innerHTML = h;
+  document.getElementById("asof").textContent = "(sorted by total, descending)";
+}
+
+function renderRosters(){
+  const {teamPts} = computeScores();
+  const out = eliminated();
+  let h = "";
+  for (const [p,info] of Object.entries(PLAYERS)){
+    h += `<div class="roster"><h3><span class="swatch" style="background:${info.color}"></span>${p}</h3><ul>`;
+    info.teams.forEach(t=>{
+      const isOut = out.has(t);
+      const pts = teamPts[t]||0;
+      h += `<li class="${isOut?'out':''}"><span>${FLAGS[t]||""} ${t}</span><span class="pts">${pts?('+'+pts):''}</span></li>`;
+    });
+    h += `</ul></div>`;
+  }
+  document.getElementById("rosters").innerHTML = h;
+}
+
+function renderChampion(){
+  const champ = validWinner(BYID["final"]);
+  const el = document.getElementById("championName");
+  if (champ){ el.textContent = `${FLAGS[champ]||""} ${champ}  (${OWNER[champ]||"—"})`; }
+  else el.textContent = "— TBD —";
+}
+
+function renderLegend(){
+  document.getElementById("legend").innerHTML =
+    Object.entries(PLAYERS).map(([p,i])=>
+      `<span><span class="swatch" style="background:${i.color}"></span>${p}</span>`).join("");
+}
+
+/* ---------- SVG elbow connectors ---------- */
+function drawConnectors(){
+  const svg = document.getElementById("connectors");
+  const bracket = document.querySelector(".bracket");
+  const R = bracket.getBoundingClientRect();
+  svg.setAttribute("width", R.width); svg.setAttribute("height", R.height);
+  svg.setAttribute("viewBox", `0 0 ${R.width} ${R.height}`);
+  let paths = "";
+  for (const m of MATCHES){
+    const info = CHILD[m.id]; if(!info) continue;
+    const from = document.getElementById("box-"+m.id);
+    const to   = document.getElementById("box-"+info.child);
+    if(!from||!to) continue;
+    const f = from.getBoundingClientRect(), t = to.getBoundingClientRect();
+    const childM = BYID[info.child];
+    const childIsRight = childM.side==="R" || (childM.id==="final" && m.side==="R");
+    // start at the side of `from` facing its child, end at side of child facing `from`
+    let x1,x2;
+    if (childIsRight){ x1 = f.right - R.left; x2 = t.left - R.left; }       // right half flows right->left
+    else            { x1 = f.right - R.left; x2 = t.left - R.left; }
+    // generic: connect from-box edge nearest child to child edge nearest from
+    const fromRight = (t.left+t.right)/2 >= (f.left+f.right)/2;
+    x1 = (fromRight ? f.right : f.left) - R.left;
+    x2 = (fromRight ? t.left  : t.right) - R.left;
+    const y1 = (f.top+f.bottom)/2 - R.top;
+    const y2 = (t.top+t.bottom)/2 - R.top;
+    const xm = (x1+x2)/2;
+    paths += `<path d="M ${x1} ${y1} H ${xm} V ${y2} H ${x2}" fill="none" stroke="#33425f" stroke-width="2"/>`;
+  }
+  svg.innerHTML = paths;
+}
+window.addEventListener("resize", ()=>requestAnimationFrame(drawConnectors));
+
+/* ---------- controls ---------- */
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  results = deepCopy(INITIAL_RESULTS); saveResults(); render();
+});
+document.getElementById("clearBtn").addEventListener("click",()=>{
+  results = {}; saveResults(); render();
+});
+
+render();
+</script>
+</body>
+</html>
