@@ -4,9 +4,10 @@ An interactive, auto-scoring bracket for the **2026 FIFA World Cup knockout stag
 (32 teams, Round of 32 → Final, **June 28 – July 19, 2026**).
 
 Four players each drafted 8 countries. Every time one of a player's teams **wins**
-a knockout match, that player earns points. Winners are taken from the official
-results at **[fifa.com](https://www.fifa.com/)**, and the standings recompute the
-instant a match goes final.
+a knockout match, that player earns points. **Results update automatically** — the
+page pulls completed matches from ESPN's public World Cup feed and recomputes the
+standings on its own as matches go final. (Winners can be cross-checked at
+**[fifa.com](https://www.fifa.com/)**.)
 
 ---
 
@@ -14,11 +15,18 @@ instant a match goes final.
 
 Open **`index.html`** in any web browser (no install/server needed).
 
-- **Click a team** to mark it the winner of its match. The winner advances
-  automatically, downstream rounds update, and the standings + rosters recompute live.
-- Picks are saved in your browser automatically.
-- **↺ Reset to official results** — restores only the matches that are actually final.
-- **✕ Clear all picks** — empties the bracket.
+- **Nothing to click** — the bracket fetches completed results automatically on
+  load and every 90 seconds, advances winners through every round, and updates
+  the standings and rosters by itself.
+- A **status bar** at the top shows the connection (green "● Live — last checked…",
+  or red if it can't reach the feed), plus a **↻ Refresh now** button.
+- Matches in progress show a red **● LIVE** badge with the running score.
+- If the live feed is ever unreachable, it falls back to the last-known standings
+  so the page is never blank.
+
+> Needs an internet connection for live updates. The data source is ESPN's public
+> scoreboard for the men's World Cup (`fifa.world`) — no API key, works directly
+> from a browser.
 
 A rendered snapshot lives at **`assets/bracket-screenshot.png`**.
 
@@ -124,30 +132,28 @@ This is the real, fixed CMA-2026 knockout bracket — no redraws.
 
 ---
 
-## 🔄 Updating results as matches finalize
+## 🔄 How results update
 
-You have two equivalent options:
+**Automatically.** The page reads completed matches from ESPN's public World Cup
+scoreboard (configured in `LIVE_CONFIG` in [`bracket-data.js`](bracket-data.js))
+and maps each real match to its bracket slot by the two teams playing, so winners
+advance through every round with no manual input. It refreshes every 90 seconds
+(adjustable via `LIVE_CONFIG.refreshSeconds`) and on every page load.
 
-1. **In the page (easiest):** open `index.html` and click the winner of each
-   finalized match. Everything updates and saves automatically.
+### Manual fallback (optional)
 
-2. **In the data file (shareable / permanent):** edit `INITIAL_RESULTS` in
-   [`bracket-data.js`](bracket-data.js). Add one line per finalized match, using
-   the winner verified at [fifa.com](https://www.fifa.com/):
+If you ever want to hard-code a result (e.g. the live feed is down, or to seed a
+known score), add it to `INITIAL_RESULTS` in [`bracket-data.js`](bracket-data.js):
 
-   ```js
-   const INITIAL_RESULTS = {
-     "r32-3":  { winner: "Canada", score: "1–0" },
-     "r32-1":  { winner: "Germany", score: "2–0" },   // example — add as they finish
-     // ...
-   };
-   ```
+```js
+const INITIAL_RESULTS = {
+  "r32-3": { winner: "Canada", score: "1–0" },   // baseline result
+  // "r32-1": { winner: "Germany", score: "2–0" }, // example
+};
+```
 
-   Match ids are `r32-1`…`r32-16`, `r16-1`…`r16-8`, `qf-1`…`qf-4`, `sf-1`, `sf-2`, `final`.
-   The `score` field is optional and is shown winner–loser.
-
-   After editing, click **↺ Reset to official results** in the page (or clear your
-   browser storage for the page) to load the new official set.
+Match ids are `r32-1`…`r32-16`, `r16-1`…`r16-8`, `qf-1`…`qf-4`, `sf-1`, `sf-2`, `final`.
+Live results override these as matches go final.
 
 ---
 
